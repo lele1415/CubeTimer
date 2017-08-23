@@ -10,90 +10,66 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.chenxs.timer.MainActivity">
 
-    <RelativeLayout
+    <LinearLayout
+        android:id="@+id/time_top"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true" >
+        android:orientation="horizontal"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="185dp">
 
-        <LinearLayout
-            android:id="@+id/top"
+        <TextView
+            android:id="@+id/hour_num"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:orientation="horizontal" >
+            android:text="0"
+            android:textSize="60dp"
+            android:visibility="gone" />
 
-            <TextView
-                android:id="@+id/hour_num"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="0"
-                android:textSize="60dp"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/hour_colon"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=":"
-                android:textSize="60dp"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/min_num"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="0"
-                android:textSize="60dp"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/min_colon"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=":"
-                android:textSize="60dp"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/sec_num"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="0"
-                android:textSize="60dp" />
-
-            <TextView
-                android:id="@+id/sec_point"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="."
-                android:textSize="60dp" />
-
-            <TextView
-                android:id="@+id/ms_num"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="000"
-                android:textSize="60dp" />
-        </LinearLayout>
-
-        <LinearLayout
+        <TextView
+            android:id="@+id/hour_colon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/top"
-            android:layout_centerHorizontal="true"
-            android:orientation="horizontal" >
+            android:text=":"
+            android:textSize="60dp"
+            android:visibility="gone" />
 
-            <Button
-                android:id="@+id/start"
-                android:layout_width="128dp"
-                android:layout_height="match_parent"
-                android:text="start" />
+        <TextView
+            android:id="@+id/min_num"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textSize="60dp"
+            android:visibility="gone" />
 
-            <Button
-                android:id="@+id/reset"
-                android:layout_width="128dp"
-                android:layout_height="match_parent"
-                android:text="reset" />
-        </LinearLayout>
-    </RelativeLayout>
+        <TextView
+            android:id="@+id/min_colon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=":"
+            android:textSize="60dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/sec_num"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textSize="60dp" />
+
+        <TextView
+            android:id="@+id/sec_point"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="."
+            android:textSize="60dp" />
+
+        <TextView
+            android:id="@+id/ms_num"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="000"
+            android:textSize="60dp" />
+    </LinearLayout>
 </RelativeLayout>

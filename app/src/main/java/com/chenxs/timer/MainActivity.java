@@ -1,13 +1,13 @@
 package com.chenxs.timer;
 
-import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import java.util.Locale;
 import java.util.Timer;
@@ -29,9 +29,10 @@ public class MainActivity extends AppCompatActivity {
 
     private long mCurrentSystemTime;
 
-    private boolean mIsStop = true;
+    private boolean mIsRunning = false;
     private boolean mShowWholeMin = false;
     private boolean mShowWholeSec = false;
+    private boolean isTouchHandled = false;
 
     private Timer mTimer = null;
     private TimerTask mTimerTask = null;
@@ -51,51 +52,36 @@ public class MainActivity extends AppCompatActivity {
         mSecNum = (TextView) findViewById(R.id.sec_num);
         mMsNum = (TextView) findViewById(R.id.ms_num);
 
-        final Button mResetBtn = (Button) findViewById(R.id.reset);
-        final Button mStartBtn = (Button) findViewById(R.id.start);
+        final RelativeLayout ll = (RelativeLayout) findViewById(R.id.activity_main);
+        ll.setOnTouchListener(new TouchListener());
+    }
 
-        mStartBtn.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View arg0) {
-                mHandler.removeMessages(1);
-
-                if (mStartBtn.getText().toString().equals("start")) {
-                    mCurrentSystemTime = System.currentTimeMillis();
-                    mIsStop = false;
-                    startTimer();
-                    mStartBtn.setText("pause");
-                } else {
-                    mHandler.sendEmptyMessage(0);
-                    mIsStop = true;
-                    stopTimer();
-                    mStartBtn.setText("start");
-                }
-
+    class TouchListener implements View.OnTouchListener {
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            int eventaction = event.getAction();
+            switch (eventaction) {
+                case MotionEvent.ACTION_DOWN:
+                    if (mIsRunning) {
+                        mHandler.sendEmptyMessage(0);
+                        mIsRunning = false;
+                        stopTimer();
+                        isTouchHandled = true;
+                    } else {
+                        isTouchHandled = false;
+                    }
+                    break;
+                case MotionEvent.ACTION_UP:
+                    if (!mIsRunning && !isTouchHandled) {
+                        mCurrentSystemTime = System.currentTimeMillis();
+                        mIsRunning = true;
+                        resetTime();
+                        startTimer();
+                    }
+                    break;
             }
-        });
-
-        mResetBtn.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View arg0) {
-                mIsStop = true;
-                stopTimer();
-
-                mHourNum.setVisibility(View.GONE);
-                mHourColon.setVisibility(View.GONE);
-                mMinNum.setVisibility(View.GONE);
-                mMinColon.setVisibility(View.GONE);
-
-                mSecNum.setText("0");
-                mMsNum.setText("000");
-
-                mStartBtn.setText("start");
-
-                mMsCount = 0;
-                mSecCount = 0;
-                mMinCount = 0;
-                mHourCount = 0;
-            }
-        });
+            return true;
+        };
     }
 
     private Handler mHandler = new Handler() {
@@ -105,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
             super.handleMessage(msg);
             switch (msg.what) {
                 case 1:
-                    if (!mIsStop) {
+                    if (mIsRunning) {
                         updateView();
                     }
                     break;
@@ -145,11 +131,35 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void resetTime() {
+        mHourNum.setVisibility(View.GONE);
+        mHourColon.setVisibility(View.GONE);
+        mMinNum.setVisibility(View.GONE);
+        mMinColon.setVisibility(View.GONE);
+
+        mSecNum.setText("0");
+        mMsNum.setText("000");
+
+        mMsCount = 0;
+        mSecCount = 0;
+        mMinCount = 0;
+        mHourCount = 0;
+
+        mShowWholeMin = false;
+        mShowWholeSec = false;
+    }
+
     private void updateView() {
-        long mNextSystemTime = System.currentTimeMillis();
+        long mDiffTime = System.currentTimeMillis() - mCurrentSystemTime;
+        mCurrentSystemTime += mDiffTime;
+
+        //if (mDiffTime < 0 || mDiffTime > 100) {
+        //    mDiffTime = 1L;
+        //}
+        //Log.i("chenxs", "mDiffTime="+mDiffTime+" mMsCount="+mMsCount);
 
         //update ms count
-        mMsCount += (int) (mNextSystemTime - mCurrentSystemTime);
+        mMsCount += (int) mDiffTime;
         if (mMsCount > 999) {
             mMsCount = mMsCount % 1000;
 
@@ -189,8 +199,6 @@ public class MainActivity extends AppCompatActivity {
         mMsNum.setText(mMsCount < 10 ? "00" + formatNumToString(mMsCount) :
                 mMsCount < 100 ? "0" + formatNumToString(mMsCount) :
                         formatNumToString(mMsCount));
-
-        mCurrentSystemTime = mNextSystemTime;
     }
 
     private String formatNumToString(int num) {
