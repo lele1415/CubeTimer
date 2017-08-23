@@ -2,41 +2,45 @@ package com.chenxs.timer;
 
 import android.content.ContentValues;
 import android.content.Intent;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
+//import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView mHourNum;
-    private TextView mHourColon;
-    private TextView mMinNum;
-    private TextView mMinColon;
-    private TextView mSecNum;
-    private TextView mMsNum;
+    private TextView mHourNumView;
+    private TextView mHourColonView;
+    private TextView mMintNumView;
+    private TextView mMintColonView;
+    private TextView mSecNumView;
+    private TextView mMsNumView;
 
     private int mMsCount = 0;
     private int mSecCount = 0;
-    private int mMinCount = 0;
+    private int mMintCount = 0;
     private int mHourCount = 0;
+
+    private boolean mMintShow = false;
+    private boolean mHourShow = false;
+
+    private StringBuilder msStr = new StringBuilder();
+    private StringBuilder secStr = new StringBuilder();
+    private StringBuilder mintStr = new StringBuilder();
+    private StringBuilder hourStr = new StringBuilder();
 
     private long mCurrentSystemTime;
 
     private boolean mIsRunning = false;
-    private boolean mShowWholeMin = false;
-    private boolean mShowWholeSec = false;
     private boolean isTouchHandled = false;
 
     private Timer mTimer = null;
@@ -53,12 +57,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        mHourNum = (TextView) findViewById(R.id.hour_num);
-        mHourColon = (TextView) findViewById(R.id.hour_colon);
-        mMinNum = (TextView) findViewById(R.id.min_num);
-        mMinColon = (TextView) findViewById(R.id.min_colon);
-        mSecNum = (TextView) findViewById(R.id.sec_num);
-        mMsNum = (TextView) findViewById(R.id.ms_num);
+        mHourNumView = (TextView) findViewById(R.id.hour_num);
+        mHourColonView = (TextView) findViewById(R.id.hour_colon);
+        mMintNumView = (TextView) findViewById(R.id.min_num);
+        mMintColonView = (TextView) findViewById(R.id.min_colon);
+        mSecNumView = (TextView) findViewById(R.id.sec_num);
+        mMsNumView = (TextView) findViewById(R.id.ms_num);
 
         final RelativeLayout ll = (RelativeLayout) findViewById(R.id.activity_main);
         ll.setOnTouchListener(new TouchListener());
@@ -79,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void addResultToDatabase(int hour, int mint, int sec, int ms) {
-        Log.i("chenxs", "addResultToDatabase hour="+hour+" mint="+mint+" sec="+sec+" ms="+ms);
+        //Log.i("chenxs", "addResultToDatabase hour="+hour+" mint="+mint+" sec="+sec+" ms="+ms);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("hour", hour);
@@ -99,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
                     if (mIsRunning) {
                         mIsRunning = false;
                         stopTimer();
-                        addResultToDatabase(mHourCount, mMinCount, mSecCount, mMsCount);
+                        addResultToDatabase(mHourCount, mMintCount, mSecCount, mMsCount);
                         isTouchHandled = true;
                     } else {
                         isTouchHandled = false;
@@ -115,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
                     break;
             }
             return true;
-        };
+        }
     }
 
     private Handler mHandler = new Handler() {
@@ -160,71 +164,97 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void resetTime() {
-        mHourNum.setVisibility(View.GONE);
-        mHourColon.setVisibility(View.GONE);
-        mMinNum.setVisibility(View.GONE);
-        mMinColon.setVisibility(View.GONE);
+        mHourNumView.setVisibility(View.GONE);
+        mHourColonView.setVisibility(View.GONE);
+        mMintNumView.setVisibility(View.GONE);
+        mMintColonView.setVisibility(View.GONE);
 
-        mSecNum.setText("0");
-        mMsNum.setText("000");
+        mSecNumView.setText("0");
+        mMsNumView.setText("000");
 
         mMsCount = 0;
         mSecCount = 0;
-        mMinCount = 0;
+        mMintCount = 0;
         mHourCount = 0;
 
-        mShowWholeMin = false;
-        mShowWholeSec = false;
+        mMintShow = false;
+        mHourShow = false;
     }
 
     private void updateView() {
         long mDiffTime = System.currentTimeMillis() - mCurrentSystemTime;
         mCurrentSystemTime += mDiffTime;
-
-        //update ms count
-        mMsCount += (int) mDiffTime;
-        if (mMsCount > 999) {
-            mMsCount = mMsCount % 1000;
-
-            //update sec count
-            mSecCount += 1;
-            if (mSecCount > 59) {
-                mShowWholeSec = true;
-                mSecCount = mSecCount % 60;
-
-                //update min count
-                mMinCount += 1;
-                if (mMinCount > 59) {
-                    mShowWholeMin = true;
-                    mMinCount = mMinCount % 60;
-
-                    //update hour count
-                    mHourCount += 1;
-                    //update hour view
-                    mHourNum.setVisibility(View.VISIBLE);
-                    mHourColon.setVisibility(View.VISIBLE);
-                    mHourNum.setText(formatNumToString(mHourCount));
-                }
-
-                //update min view
-                mMinNum.setVisibility(View.VISIBLE);
-                mMinColon.setVisibility(View.VISIBLE);
-                mMinNum.setText((mShowWholeMin && mMinCount < 10) ? "0" + formatNumToString(mMinCount) :
-                        formatNumToString(mMinCount));
-            }
-
-            //update sec view
-            mSecNum.setText((mShowWholeSec && mSecCount < 10) ? "0" + formatNumToString(mSecCount) :
-                    formatNumToString(mSecCount));
-        }
-
-        //update ms view
-        mMsNum.setText(mMsCount < 10 ? "00" + formatNumToString(mMsCount) :
-                mMsCount < 100 ? "0" + formatNumToString(mMsCount) :
-                        formatNumToString(mMsCount));
+        updateMsCount(mDiffTime);
     }
 
-    private String formatNumToString(int num) {
-        return String.format(Locale.getDefault(), "%d", num);
+    private void updateMsCount(long plusNum) {
+        mMsCount += (int) plusNum;
+        if (mMsCount > 999) {
+            mSecCount += mMsCount / 1000;
+            updateSecCount();
+            mMsCount = mMsCount % 1000;
+        }
+
+        msStr.delete(0, msStr.length());
+        msStr.append(mMsCount);
+        if (mMsCount < 100) {
+            msStr.insert(0, "0");
+            if (mMsCount < 10) {
+                msStr.insert(0, "0");
+            }
+        }
+
+        mMsNumView.setText(msStr);
+    }
+
+    private void updateSecCount() {
+        if (mSecCount > 59) {
+            mMintCount += mSecCount / 60;
+            updateMintCount();
+            mSecCount = mSecCount % 60;
+        }
+
+        secStr.delete(0, secStr.length());
+        secStr.append(mSecCount);
+        if (mSecCount < 10 && mMintShow) {
+            secStr.insert(0, "0");
+        }
+
+        mSecNumView.setText(secStr);
+    }
+
+    private void updateMintCount() {
+        if (mMintCount > 59) {
+            mHourCount += mMintCount / 60;
+            updateHourCount();
+            mMintCount = mMintCount % 60;
+        }
+
+        mintStr.delete(0, mintStr.length());
+        mintStr.append(mMintCount);
+        if (mMintCount < 10 && mHourShow) {
+            mintStr.insert(0, "0");
+        }
+
+        if (!mMintShow) {
+            mMintNumView.setVisibility(View.VISIBLE);
+            mMintColonView.setVisibility(View.VISIBLE);
+            mMintShow = true;
+        }
+
+        mMintNumView.setText(mintStr);
+    }
+
+    private void updateHourCount() {
+        hourStr.delete(0, hourStr.length());
+        hourStr.append(mHourCount);
+
+        if (!mHourShow) {
+            mHourNumView.setVisibility(View.VISIBLE);
+            mHourColonView.setVisibility(View.VISIBLE);
+            mHourShow = true;
+        }
+
+        mHourNumView.setText(hourStr);
     }
 }
