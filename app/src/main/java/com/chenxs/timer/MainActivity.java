@@ -1,5 +1,9 @@
 package com.chenxs.timer;
 
+import android.content.ContentValues;
+import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
@@ -7,6 +11,7 @@ import android.os.Message;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import java.util.Locale;
@@ -37,11 +42,14 @@ public class MainActivity extends AppCompatActivity {
     private Timer mTimer = null;
     private TimerTask mTimerTask = null;
 
+    private DatabaseHelper dbHelper;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initViews();
+        initDatabese();
     }
 
     private void initViews() {
@@ -54,6 +62,32 @@ public class MainActivity extends AppCompatActivity {
 
         final RelativeLayout ll = (RelativeLayout) findViewById(R.id.activity_main);
         ll.setOnTouchListener(new TouchListener());
+
+        Button queryBtn = (Button) findViewById(R.id.result_list_button);
+        queryBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(MainActivity.this, ResultListActivity.class);
+                startActivity(i);
+            }
+        });
+    }
+
+    private void initDatabese() {
+        dbHelper = new DatabaseHelper(this, "Result.db", null, 1);
+        dbHelper.getWritableDatabase();
+    }
+
+    private void addResultToDatabase(int hour, int mint, int sec, int ms) {
+        Log.i("chenxs", "addResultToDatabase hour="+hour+" mint="+mint+" sec="+sec+" ms="+ms);
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("hour", hour);
+        values.put("mint", mint);
+        values.put("sec", sec);
+        values.put("ms", ms);
+        db.insert("Result", null, values);
+        values.clear();
     }
 
     class TouchListener implements View.OnTouchListener {
@@ -63,9 +97,9 @@ public class MainActivity extends AppCompatActivity {
             switch (eventaction) {
                 case MotionEvent.ACTION_DOWN:
                     if (mIsRunning) {
-                        mHandler.sendEmptyMessage(0);
                         mIsRunning = false;
                         stopTimer();
+                        addResultToDatabase(mHourCount, mMinCount, mSecCount, mMsCount);
                         isTouchHandled = true;
                     } else {
                         isTouchHandled = false;
@@ -89,14 +123,8 @@ public class MainActivity extends AppCompatActivity {
         public void handleMessage(Message msg) {
             // TODO Auto-generated method stub
             super.handleMessage(msg);
-            switch (msg.what) {
-                case 1:
-                    if (mIsRunning) {
-                        updateView();
-                    }
-                    break;
-                case 0:
-                    break;
+            if (mIsRunning) {
+                updateView();
             }
         }
 
@@ -152,11 +180,6 @@ public class MainActivity extends AppCompatActivity {
     private void updateView() {
         long mDiffTime = System.currentTimeMillis() - mCurrentSystemTime;
         mCurrentSystemTime += mDiffTime;
-
-        //if (mDiffTime < 0 || mDiffTime > 100) {
-        //    mDiffTime = 1L;
-        //}
-        //Log.i("chenxs", "mDiffTime="+mDiffTime+" mMsCount="+mMsCount);
 
         //update ms count
         mMsCount += (int) mDiffTime;
